@@ -16,8 +16,22 @@ headers = {"Content-Type": "application/json", "Authorization": token}
 get_enterprise = vco_url + 'enterprise/getEnterprise'
 get_edgelist = vco_url+'enterprise/getEnterpriseEdgeList'
 
+#### Crawler Id file
+crawler_id_file_name = os.environ['CRAWLER_ID_FILE_NAME'] if 'CRAWLER_ID_FILE_NAME' in os.environ else "crawlerId.json"
+
 ######################### Main Program #####################
 def main():
+
+	crawlerIds = {}
+	if os.path.exists(crawler_id_file_name):
+		with open(crawler_id_file_name) as json_file:
+			input_json_value = json.load(json_file)
+			if input_json_value and len(input_json_value) > 0:
+				for crawler in input_json_value:
+					if "name" in crawler and crawler["name"] and "crawlerId" and crawler["crawlerId"]: 
+						crawlerIds[crawler["name"]] = crawler["crawlerId"]
+
+
 	enterprise = requests.post(get_enterprise, headers=headers, data='')
 	ent_j = enterprise.json()
 	eid=ent_j['id']
@@ -29,7 +43,7 @@ def main():
 	site_array = []
 	for edge in eList_dict:
             site_array.append({'name': edge['name'],
-                                   'CrawlerIds': '',
+                                   'CrawlerIds': crawlerIds[edge['name']] if edge['name'] in crawlerIds else '',
                                    'ControllerIps': '',
                                    'Subnets': '',
                                    'APs': '',
